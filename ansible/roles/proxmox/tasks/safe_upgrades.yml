@@ -19,8 +19,16 @@
     autoremove: yes
     autoclean: yes
 
-- name: Upgrade all Proxmox-related packages (non-kernel)
+- name: Upgrade selected packages, excluding kernel/ZFS
   apt:
-    name: "*"
+    name: "{{ item }}"
     state: latest
-    update_cache: yes
+  loop: >-
+    {{
+      upgradable_packages.stdout_lines
+      | reject('search', '^Listing')
+      | map('split', '/')
+      | map('first')
+      | reject('match', 'linux-image|pve-kernel|zfs|spl')
+      | list
+    }}

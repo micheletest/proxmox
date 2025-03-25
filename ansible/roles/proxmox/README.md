@@ -40,3 +40,6 @@ chmod 0440 /etc/sudoers.d/ansibleadmin
 ## Example command
 
 `ansible-playbook -i inventories/home-lab/hosts.yml playbooks/bootstrap_proxmox.yml`
+
+And if you want to update the kernel or zfs:
+`ansible-playbook -i inventories/home-lab/hosts.yml playbooks/dangerous-upgrades.yml`
