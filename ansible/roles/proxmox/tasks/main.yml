@@ -1,0 +1,2 @@
+- import_tasks: repository.yml
+- import_tasks: safe_upgrades.yml

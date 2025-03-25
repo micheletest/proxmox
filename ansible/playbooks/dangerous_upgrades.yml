@@ -1,0 +1,32 @@
+- name: Perform kernel and ZFS package upgrades
+  hosts: proxmox
+  become: true
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: List available upgradable packages
+      command: apt list --upgradable
+      register: upgradable_packages
+      changed_when: false
+
+    - name: Show kernel/ZFS packages to be upgraded
+      debug:
+        msg: "🧨 Will upgrade: {{ item }}"
+      loop: "{{ upgradable_packages.stdout_lines }}"
+      when: item is search('linux-image|pve-kernel|zfs|spl')
+
+    - name: Upgrade kernel and ZFS packages
+      apt:
+        name: "{{ item }}"
+        state: latest
+      loop: "{{ upgradable_packages.stdout_lines | map('split', '/') | map('first') | select('match', 'linux-image|pve-kernel|zfs|spl') | list }}"
+      when: upgradable_packages.stdout_lines | length > 0
+
+    - name: Reboot if kernel or ZFS packages were upgraded
+      reboot:
+        msg: "Rebooting after kernel/ZFS upgrade"
+        pre_reboot_delay: 10
+        reboot_timeout: 600
+        test_command: uptime
