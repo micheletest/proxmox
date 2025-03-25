@@ -1,0 +1,26 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: List available upgradable packages
+  command: apt list --upgradable
+  register: upgradable_packages
+  changed_when: false
+
+- name: Warn if kernel or ZFS packages are upgradable
+  debug:
+    msg: "⚠️ Kernel or ZFS upgrade available: {{ item }}"
+  loop: "{{ upgradable_packages.stdout_lines }}"
+  when: item is search('linux-image|pve-kernel|zfs|spl')
+
+- name: Upgrade all system packages (safe upgrade)
+  apt:
+    upgrade: yes
+    autoremove: yes
+    autoclean: yes
+
+- name: Upgrade all Proxmox-related packages (non-kernel)
+  apt:
+    name: "*"
+    state: latest
+    update_cache: yes
