@@ -1,0 +1,37 @@
+- name: Ensure sudo is installed
+  apt:
+    name: sudo
+    state: present
+    update_cache: yes
+
+- name: Create user "{{ ansible_user_name }}"
+  user:
+    name: "{{ ansible_user_name }}"
+    shell: "{{ ansible_user_shell }}"
+    groups: "{{ ansible_user_groups }}"
+    append: yes
+    create_home: yes
+
+- name: Create .ssh directory
+  file:
+    path: "/home/{{ ansible_user_name }}/.ssh"
+    state: directory
+    owner: "{{ ansible_user_name }}"
+    group: "{{ ansible_user_name }}"
+    mode: "0700"
+
+- name: Set authorized_keys for ansible user
+  when: ansible_user_pubkey != ""
+  copy:
+    content: "{{ ansible_user_pubkey }}"
+    dest: "/home/{{ ansible_user_name }}/.ssh/authorized_keys"
+    owner: "{{ ansible_user_name }}"
+    group: "{{ ansible_user_name }}"
+    mode: "0600"
+
+- name: Allow passwordless sudo (if enabled)
+  when: ansible_user_sudo_nopasswd
+  copy:
+    content: "{{ ansible_user_name }} ALL=(ALL) NOPASSWD: ALL"
+    dest: "/etc/sudoers.d/{{ ansible_user_name }}"
+    mode: "0440"

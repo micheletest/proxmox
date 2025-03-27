@@ -1,0 +1,46 @@
+- name: Create and configure VM for reverse proxy
+  hosts: proxmox
+  gather_facts: false
+  vars:
+    vm_name: reverse-proxy
+    vm_id: 200
+    vm_memory: 2048
+    vm_cores: 2
+    vm_disk_size: 8G
+    vm_bridge: vmbr0
+    vm_ip: 192.168.88.10/24
+    vm_gateway: 192.168.88.1
+    vm_ssh_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+    vm_image: local-lvm:vm-100-disk-0 # Replace with your template or base image
+  tasks:
+    - name: Create Proxmox VM using community.general.proxmox
+      community.general.proxmox:
+        api_host: 192.168.88.33
+        vmid: "{{ vm_id }}"
+        node: pve
+        hostname: "{{ vm_name }}"
+        cores: "{{ vm_cores }}"
+        memory: "{{ vm_memory }}"
+        net0: virtio,bridge={{ vm_bridge }},firewall=1
+        ide2: local:cloudinit
+        scsihw: virtio-scsi-pci
+        sata0: "{{ vm_image }},size={{ vm_disk_size }}"
+        ciuser: ansibleadmin
+        cipassword: CI_PASSWORD
+        sshkeys: "{{ vm_ssh_key }}"
+        ipconfig0: ip={{ vm_ip }},gw={{ vm_gateway }}
+        ostype: debian
+        pool: lab
+        api_user: "root@pam"
+        api_password: ROOT_API_PASSWORD
+
+- name: Set up reverse proxy with Caddy for Proxmox and Authentik
+  hosts: reverse_proxy
+  become: true
+  vars:
+    authentik_secret_key: "{{ AUTHENTIK_SECRET_KEY }}"
+  roles:
+    - reverse_proxy
+    - role: authentik
+      vars:
+        authentik_secret_key: "{{ AUTHENTIK_SECRET_KEY }}"
