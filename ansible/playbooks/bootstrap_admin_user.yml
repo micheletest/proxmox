@@ -1,0 +1,5 @@
+- name: Bootstrap Proxmox with ansible user
+  hosts: proxmox
+  become: false
+  roles:
+    - role: bootstrap_admin_user

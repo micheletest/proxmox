@@ -1,0 +1,7 @@
+proxmox_host: "192.168.88.33"
+
+# This is your initial bootstrap token or manual admin credentials
+# Checking this in with fake values
+proxmox_admin_user: "root@pam"
+proxmox_token_id: "bootstrap"
+proxmox_token_secret: "f073ef20-6cea-42f7-a556-6efb20298e38"
