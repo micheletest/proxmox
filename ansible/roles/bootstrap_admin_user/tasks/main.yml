@@ -54,6 +54,21 @@
     validate_certs: no
   delegate_to: localhost
 
+- name: Assign PVEAdmin to proxmoxadmin@pve on /sdn/zones/localnetwork/vmbr0
+  uri:
+    url: "https://{{ proxmox_host }}:8006/api2/json/access/acl"
+    method: PUT
+    body_format: json
+    headers:
+      Authorization: "PVEAPIToken={{ proxmox_admin_user }}!{{ proxmox_token_id }}={{ proxmox_token_secret }}"
+    body:
+      path: "/sdn/zones/localnetwork/vmbr0"
+      users: "proxmoxadmin@pve"
+      roles: "PVEAdmin"
+    status_code: [200, 400]
+    validate_certs: no
+  delegate_to: localhost
+
 - name: Create API token 'automation' for proxmoxadmin@pve
   uri:
     url: "https://{{ proxmox_host }}:8006/api2/json/access/users/proxmoxadmin@pve/token/automation"
@@ -67,6 +82,21 @@
     status_code: [200, 400]
     validate_certs: no
   register: token_creation
+  delegate_to: localhost
+
+- name: Assign PVEDatastoreAdmin to proxmoxadmin@pve on /storage/local-lvm
+  uri:
+    url: "https://{{ proxmox_host }}:8006/api2/json/access/acl"
+    method: PUT
+    body_format: json
+    headers:
+      Authorization: "PVEAPIToken={{ proxmox_admin_user }}!{{ proxmox_token_id }}={{ proxmox_token_secret }}"
+    body:
+      path: "/storage/local-lvm"
+      users: "proxmoxadmin@pve"
+      roles: "PVEDatastoreAdmin"
+    status_code: [200, 400]
+    validate_certs: no
   delegate_to: localhost
 
 - name: Save Proxmox token for proxmoxadmin locally

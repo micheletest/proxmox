@@ -1,0 +1,50 @@
+- name: Ensure curl and ca-certificates are installed
+  apt:
+    name:
+      - curl
+      - debian-keyring
+      - debian-archive-keyring
+      - apt-transport-https
+    state: present
+    update_cache: yes
+
+- name: Download Caddy GPG key
+  ansible.builtin.get_url:
+    url: https://dl.cloudsmith.io/public/caddy/stable/gpg.key
+    dest: /tmp/caddy.gpg
+    mode: "0644"
+
+- name: Convert GPG key to binary format
+  ansible.builtin.command:
+    cmd: "gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg /tmp/caddy.gpg"
+  args:
+    creates: /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+
+- name: Download Caddy APT source list
+  ansible.builtin.get_url:
+    url: https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt
+    dest: /etc/apt/sources.list.d/caddy-stable.list
+    mode: "0644"
+
+- name: Update APT cache
+  apt:
+    update_cache: yes
+
+- name: Install Caddy from APT
+  apt:
+    name: caddy
+    state: present
+
+- name: Deploy custom systemd unit
+  copy:
+    src: caddy.service
+    dest: /etc/systemd/system/caddy.service
+    mode: "0644"
+  notify: Reload systemd and restart caddy
+
+- name: Create Caddy config file
+  template:
+    src: Caddyfile.j2
+    dest: /etc/caddy/Caddyfile
+    mode: "0644"
+  notify: Restart caddy

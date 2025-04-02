@@ -1,2 +1,3 @@
 ansible/playbooks/proxmoxadmin_token.json
 packer/lxc/output
+venv/*
