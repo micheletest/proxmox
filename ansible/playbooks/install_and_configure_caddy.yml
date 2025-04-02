@@ -1,0 +1,5 @@
+- name: Install and configure Caddy
+  hosts: caddy
+  become: true
+  roles:
+    - caddy

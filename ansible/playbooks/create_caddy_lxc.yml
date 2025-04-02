@@ -33,4 +33,4 @@
         storage: "{{ lxc_storage }}"
         netif: '{"net0":"name=eth0,bridge=vmbr0,ip=dhcp"}'
         password: "{{ caddy_password }}"
-        state: present
+        state: running
