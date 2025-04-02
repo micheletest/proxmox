@@ -34,3 +34,39 @@
         netif: '{"net0":"name=eth0,bridge=vmbr0,ip=dhcp"}'
         password: "{{ caddy_password }}"
         state: present
+      delegate_to: localhost
+
+    - name: Start the Caddy LXC container
+      command: "pct start {{ caddy_vmid }}"
+      delegate_to: proxmox
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+
+    - name: Ensure root SSH directory exists in LXC
+      command: "pct exec {{ caddy_vmid }} -- mkdir -p /root/.ssh"
+      delegate_to: proxmox
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+
+    - name: Add SSH public key for root
+      command: >
+        pct exec {{ caddy_vmid }} -- bash -c "echo '{{ lookup('file', '~/.ssh/id_ed25519.pub') }}' >> /root/.ssh/authorized_keys"
+      delegate_to: proxmox
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+
+    - name: Fix permissions on root SSH directory
+      command: "pct exec {{ caddy_vmid }} -- chmod 600 /root/.ssh/authorized_keys"
+      delegate_to: proxmox
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+
+    - name: Allow root login and disable password auth
+      command: >
+        pct exec {{ caddy_vmid }} -- bash -c "
+        sed -i 's/^#\\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config &&
+        sed -i 's/^#\\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config &&
+        systemctl restart ssh"
+      delegate_to: proxmox
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
