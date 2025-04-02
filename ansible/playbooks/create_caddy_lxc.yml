@@ -13,7 +13,7 @@
     proxmox_token_secret: "{{ lookup('file', './proxmoxadmin_token.json') | from_json | json_query('value') }}"
     caddy_vmid: 202
     caddy_hostname: caddy
-    lxc_template: "local:vztmpl/debian-bullseye-custom.tar.gz"
+    lxc_template: "local:vztmpl/debian-bullseye-custom-with-service-tools.tar.gz"
     lxc_storage: "local-lvm"
 
   tasks:
@@ -33,4 +33,4 @@
         storage: "{{ lxc_storage }}"
         netif: '{"net0":"name=eth0,bridge=vmbr0,ip=dhcp"}'
         password: "{{ caddy_password }}"
-        state: running
+        state: present
