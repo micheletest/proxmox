@@ -1,47 +1,50 @@
-- name: Ensure required packages are installed
+- name: Ensure curl and ca-certificates are installed
   apt:
     name:
+      - curl
       - debian-keyring
       - debian-archive-keyring
       - apt-transport-https
     state: present
     update_cache: yes
 
-- name: Add Caddy APT signing key
+- name: Download Caddy GPG key
   ansible.builtin.get_url:
     url: https://dl.cloudsmith.io/public/caddy/stable/gpg.key
-    dest: /usr/share/keyrings/caddy-archive-keyring.gpg
+    dest: /tmp/caddy.gpg
     mode: "0644"
 
-- name: Add Caddy APT repository
-  apt_repository:
-    repo: "deb [signed-by=/usr/share/keyrings/caddy-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian all main"
-    state: present
-    filename: caddy
+- name: Convert GPG key to binary format
+  ansible.builtin.command:
+    cmd: "gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg /tmp/caddy.gpg"
+  args:
+    creates: /usr/share/keyrings/caddy-stable-archive-keyring.gpg
 
-- name: Install Caddy
+- name: Download Caddy APT source list
+  ansible.builtin.get_url:
+    url: https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt
+    dest: /etc/apt/sources.list.d/caddy-stable.list
+    mode: "0644"
+
+- name: Update APT cache
+  apt:
+    update_cache: yes
+
+- name: Install Caddy from APT
   apt:
     name: caddy
     state: present
-    update_cache: yes
 
-- name: Ensure Caddy config directory exists
-  file:
-    path: "{{ caddy_config_dir }}"
-    state: directory
-    mode: "0755"
+- name: Deploy custom systemd unit
+  copy:
+    src: caddy.service
+    dest: /etc/systemd/system/caddy.service
+    mode: "0644"
+  notify: Reload systemd and restart caddy
 
-- name: Deploy Caddyfile
+- name: Create Caddy config file
   template:
     src: Caddyfile.j2
-    dest: "{{ caddy_config_file }}"
+    dest: /etc/caddy/Caddyfile
     mode: "0644"
-    owner: root
-    group: root
-  notify: Restart Caddy
-
-- name: Ensure Caddy is enabled and started
-  systemd:
-    name: caddy
-    state: started
-    enabled: yes
+  notify: Restart caddy
