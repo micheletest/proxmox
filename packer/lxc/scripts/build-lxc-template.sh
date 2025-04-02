@@ -3,13 +3,18 @@ set -e
 
 DISTRO="bullseye"
 ARCH="amd64"
-TEMPLATE_NAME="debian-${DISTRO}-custom.tar.gz"
+TEMPLATE_NAME="debian-${DISTRO}-custom-with-service-tools.tar.gz"
 ROOTFS_DIR="/tmp/debian-lxc-rootfs"
 TEMPLATE_PATH="/var/lib/vz/template/cache/${TEMPLATE_NAME}"
 
 echo "📦 Installing build tools"
 apt-get update
 apt-get install -y debootstrap tar xz-utils
+
+echo "Installing service tools"
+apt update && apt install -y \
+  openssh-server sudo curl wget gnupg ca-certificates \
+  iproute2 locales systemd cron
 
 echo "🧹 Cleaning previous builds"
 rm -rf "$ROOTFS_DIR"
