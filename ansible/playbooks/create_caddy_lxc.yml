@@ -1,0 +1,36 @@
+- name: Create Caddy LXC container on Proxmox
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../vaults/caddy.yml # for password
+
+  vars:
+    ansible_python_interpreter: "{{ playbook_dir }}/../venv/bin/python"
+    proxmox_host: "192.168.88.33"
+    proxmox_node: "trixieb"
+    proxmox_api_user: "proxmoxadmin@pve"
+    proxmox_token_id: "automation"
+    proxmox_token_secret: "{{ lookup('file', './proxmoxadmin_token.json') | from_json | json_query('value') }}"
+    caddy_vmid: 202
+    caddy_hostname: caddy
+    lxc_template: "local:vztmpl/debian-bullseye-custom.tar.gz"
+    lxc_storage: "local-lvm"
+
+  tasks:
+    - name: Create Caddy LXC container
+      community.general.proxmox:
+        api_host: "{{ proxmox_host }}"
+        api_user: "{{ proxmox_api_user }}"
+        api_token_id: "{{ proxmox_token_id }}"
+        api_token_secret: "{{ proxmox_token_secret }}"
+        node: "{{ proxmox_node }}"
+        vmid: "{{ caddy_vmid }}"
+        hostname: "{{ caddy_hostname }}"
+        ostemplate: "{{ lxc_template }}"
+        cores: 2
+        memory: 1024
+        swap: 512
+        storage: "{{ lxc_storage }}"
+        netif: '{"net0":"name=eth0,bridge=vmbr0,ip=dhcp"}'
+        password: "{{ caddy_password }}"
+        state: present
