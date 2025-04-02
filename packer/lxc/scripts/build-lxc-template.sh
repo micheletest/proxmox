@@ -38,7 +38,8 @@ mount --bind /sys "$ROOTFS_DIR/sys"
 echo "🚪 Entering chroot to install openssh-server"
 chroot "$ROOTFS_DIR" /bin/bash -c "
 apt-get update
-apt-get install -y openssh-server sudo curl wget gnupg iproute2
+apt-get install -y openssh-server sudo curl wget gnupg iproute2 python3
+ln -s /usr/bin/python3 /usr/bin/python
 systemctl enable ssh
 sed -i 's/^#\\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 sed -i 's/^#\\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
