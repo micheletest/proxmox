@@ -16,6 +16,9 @@ apt update && apt install -y \
   openssh-server sudo curl wget gnupg ca-certificates \
   iproute2 locales systemd cron
 
+echo "Enabling ssh"
+systemctl enable ssh
+
 echo "🧹 Cleaning previous builds"
 rm -rf "$ROOTFS_DIR"
 mkdir -p "$ROOTFS_DIR"
