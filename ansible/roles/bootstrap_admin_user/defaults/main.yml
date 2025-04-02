@@ -4,4 +4,4 @@ proxmox_host: "192.168.88.33"
 # Checking this in with fake values
 proxmox_admin_user: "root@pam"
 proxmox_token_id: "bootstrap"
-proxmox_token_secret: "f4565771-99b3-4477-aa75-18edd04c7936"
+proxmox_token_secret: "replace-with-valid-token"
