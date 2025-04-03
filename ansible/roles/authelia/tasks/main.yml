@@ -1,0 +1,61 @@
+- name: Ensure ca-certificates and curl are installed
+  apt:
+    name:
+      - ca-certificates
+      - curl
+    state: present
+    update_cache: yes
+
+- name: Download Authelia GPG key
+  get_url:
+    url: https://apt.authelia.com/organization/signing.asc
+    dest: /usr/share/keyrings/authelia.asc
+    mode: "0644"
+
+- name: Add Authelia APT repository
+  copy:
+    dest: /etc/apt/sources.list.d/authelia.list
+    content: |
+      deb [arch=amd64 signed-by=/usr/share/keyrings/authelia.asc] https://apt.authelia.com/stable/debian/debian all main
+    mode: "0644"
+
+- name: Update APT cache
+  apt:
+    update_cache: yes
+
+- name: Install Authelia from APT
+  apt:
+    name: authelia
+    state: present
+
+- name: Hash password using system-installed Authelia
+  shell: echo "{{ authelia_password }}" | authelia hash-password
+  register: hashed_password_result
+  changed_when: false
+
+- name: Deploy users.yml with hashed password
+  copy:
+    dest: "{{ authelia_config_path }}/users.yml"
+    content: |
+      users:
+        {{ authelia_user }}:
+          password: "{{ hashed_password_result.stdout }}"
+          displayname: "Authelia Admin"
+          groups:
+            - admins
+    mode: "0644"
+  notify: Restart Authelia
+
+- name: Deploy configuration.yml
+  template:
+    src: configuration.yml.j2
+    dest: "{{ authelia_config_path }}/configuration.yml"
+    mode: "0644"
+  notify: Restart Authelia
+
+- name: Deploy authelia systemd service
+  copy:
+    src: authelia.service
+    dest: /etc/systemd/system/authelia.service
+    mode: "0644"
+  notify: Enable and Restart Authelia

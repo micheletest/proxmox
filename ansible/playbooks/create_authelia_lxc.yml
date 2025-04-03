@@ -1,0 +1,72 @@
+- name: Create Authelia LXC container on Proxmox
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../vaults/authelia.yml # for password
+
+  vars:
+    ansible_python_interpreter: "{{ playbook_dir }}/../venv/bin/python"
+    proxmox_host: "192.168.88.33"
+    proxmox_node: "trixieb"
+    proxmox_api_user: "proxmoxadmin@pve"
+    proxmox_token_id: "automation"
+    proxmox_token_secret: "{{ lookup('file', './proxmoxadmin_token.json') | from_json | json_query('value') }}"
+    authelia_vmid: 203
+    authelia_hostname: authelia
+    lxc_template: "local:vztmpl/debian-bullseye-custom-with-service-tools.tar.gz"
+    lxc_storage: "local-lvm"
+
+  tasks:
+    - name: Create Authelia LXC container
+      community.general.proxmox:
+        api_host: "{{ proxmox_host }}"
+        api_user: "{{ proxmox_api_user }}"
+        api_token_id: "{{ proxmox_token_id }}"
+        api_token_secret: "{{ proxmox_token_secret }}"
+        node: "{{ proxmox_node }}"
+        vmid: "{{ authelia_vmid }}"
+        hostname: "{{ authelia_hostname }}"
+        ostemplate: "{{ lxc_template }}"
+        cores: 1
+        memory: 512
+        swap: 256
+        storage: "{{ lxc_storage }}"
+        netif: '{"net0":"name=eth0,bridge=vmbr0,ip=dhcp"}'
+        password: "{{ authelia_password }}"
+        state: present
+      delegate_to: localhost
+
+    - name: Start the Authelia LXC container
+      command: "pct start {{ authelia_vmid }}"
+      delegate_to: proxmox
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+
+    - name: Ensure root SSH directory exists in LXC
+      command: "pct exec {{ authelia_vmid }} -- mkdir -p /root/.ssh"
+      delegate_to: proxmox
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+
+    - name: Add SSH public key for root
+      command: >
+        pct exec {{ authelia_vmid }} -- bash -c "echo '{{ lookup('file', '~/.ssh/id_ed25519.pub') }}' >> /root/.ssh/authorized_keys"
+      delegate_to: proxmox
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+
+    - name: Fix permissions on root SSH directory
+      command: "pct exec {{ authelia_vmid }} -- chmod 600 /root/.ssh/authorized_keys"
+      delegate_to: proxmox
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+
+    - name: Allow root login and disable password auth
+      command: >
+        pct exec {{ authelia_vmid }} -- bash -c "
+        sed -i 's/^#\\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config &&
+        sed -i 's/^#\\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config &&
+        systemctl restart ssh"
+      delegate_to: proxmox
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
