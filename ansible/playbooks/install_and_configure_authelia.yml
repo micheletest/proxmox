@@ -6,7 +6,7 @@
   vars_files:
     - ../vaults/authelia.yml # for password
   vars:
-    authelia_user: authelia
+    authelia_user: proxmox_authelia
     authelia_domain: "{{ authelia_domain }}"
     authelia_port: 9091
     authelia_session_secret: "{{ authelia_session_secret }}"

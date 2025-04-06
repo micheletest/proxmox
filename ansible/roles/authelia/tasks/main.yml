@@ -28,21 +28,22 @@
     name: authelia
     state: present
 
-- name: Hash password using system-installed Authelia
-  shell: echo "{{ authelia_password }}" | authelia hash-password
+- name: Hash password using Authelia 4.38+ CLI
+  shell: >
+    authelia crypto hash generate argon2
+    --password "{{ authelia_password }}"
+    --no-confirm
   register: hashed_password_result
   changed_when: false
 
-- name: Deploy users.yml with hashed password
-  copy:
+- name: Extract only the hash from Authelia output
+  set_fact:
+    authelia_password_hash: "{{ hashed_password_result.stdout | regex_replace('^Digest: ', '') | trim }}"
+
+- name: Deploy users.yml from template
+  template:
+    src: users.yml.j2
     dest: "{{ authelia_config_path }}/users.yml"
-    content: |
-      users:
-        {{ authelia_user }}:
-          password: "{{ hashed_password_result.stdout }}"
-          displayname: "Authelia Admin"
-          groups:
-            - admins
     mode: "0644"
   notify: Restart Authelia
 

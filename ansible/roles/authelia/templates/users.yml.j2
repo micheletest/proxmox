@@ -1,0 +1,6 @@
+users:
+  {{ authelia_user }}:
+    password: "{{ authelia_password_hash }}"
+    displayname: "Authelia Admin"
+    groups:
+      - admins

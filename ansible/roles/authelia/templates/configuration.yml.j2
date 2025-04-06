@@ -4,19 +4,11 @@ log:
 host: 0.0.0.0
 port: {{ authelia_port }}
 
-identity_providers:
-  local:
-    enabled: true
-
 session:
   name: authelia_session
   secret: {{ authelia_session_secret }}
   expiration: 3600
   domain: {{ authelia_domain }}
-
-storage:
-  local:
-    path: {{ authelia_config_path }}/storage.sqlite3
 
 authentication_backend:
   file:
@@ -31,4 +23,13 @@ access_control:
 notifier:
   filesystem:
     filename: {{ authelia_config_path }}/notification.txt
+
+identity_validation:
+  reset_password:
+    jwt_secret: "{{ authelia_jwt_secret }}"
+
+storage:
+  encryption_key: "{{ authelia_storage_encryption_key }}"
+  local:
+    path: {{ authelia_config_path }}/storage.sqlite3
 
