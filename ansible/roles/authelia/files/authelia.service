@@ -1,0 +1,13 @@
+[Unit]
+Description=Authelia Identity Provider
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/authelia --config /etc/authelia/configuration.yml
+Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target
+

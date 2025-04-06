@@ -1,0 +1,11 @@
+- name: Enable and Restart Authelia
+  systemd:
+    name: authelia
+    enabled: true
+    daemon_reload: yes
+    state: restarted
+
+- name: Restart Authelia
+  systemd:
+    name: authelia
+    state: restarted
