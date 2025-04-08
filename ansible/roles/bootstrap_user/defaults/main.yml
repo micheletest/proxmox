@@ -1,5 +1,0 @@
-ansible_user_name: ansibleadmin
-ansible_user_pubkey: ""
-ansible_user_groups: [sudo]
-ansible_user_shell: /bin/bash
-ansible_user_sudo_nopasswd: true

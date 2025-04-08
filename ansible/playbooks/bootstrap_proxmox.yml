@@ -1,4 +1,4 @@
 - name: Bootstrap a Proxmox host
   hosts: proxmox
   roles:
-    - proxmox
+    - bootstrap-proxmox
