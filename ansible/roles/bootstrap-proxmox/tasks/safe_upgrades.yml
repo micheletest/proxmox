@@ -1,25 +1,40 @@
 - name: Update apt cache
+  become: true
+  become_method: sudo
+  become_flags: "-H -n"
   apt:
     update_cache: yes
 
 - name: List available upgradable packages
+  become: true
+  become_method: sudo
+  become_flags: "-H -n"
   command: apt list --upgradable
   register: upgradable_packages
   changed_when: false
 
 - name: Warn if kernel or ZFS packages are upgradable
+  become: true
+  become_method: sudo
+  become_flags: "-H -n"
   debug:
     msg: "⚠️ Kernel or ZFS upgrade available: {{ item }}"
   loop: "{{ upgradable_packages.stdout_lines }}"
   when: item is search('linux-image|pve-kernel|zfs|spl')
 
 - name: Upgrade all system packages (safe upgrade)
+  become: true
+  become_method: sudo
+  become_flags: "-H -n"
   apt:
     upgrade: yes
     autoremove: yes
     autoclean: yes
 
 - name: Upgrade selected packages, excluding kernel/ZFS
+  become: true
+  become_method: sudo
+  become_flags: "-H -n"
   apt:
     name: "{{ item }}"
     state: latest

@@ -1,6 +1,9 @@
 - name: Perform kernel and ZFS package upgrades
   hosts: proxmox
   become: true
+  become_method: sudo
+  become_flags: "-H -n"
+  remote_user: ansible_node_admin
   tasks:
     - name: Update apt cache
       apt:
